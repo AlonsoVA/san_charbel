@@ -1,0 +1,239 @@
+================================================================================
+PROMPTS UTILIZADOS CON IA (Cursor) — Revisión y análisis Backend API
+Notas de Evolución (san_charbel)
+================================================================================
+
+Nota:
+Los siguientes prompts fueron utilizados como apoyo para revisar, validar y analizar
+la estructura del backend desarrollado en Next.js con MongoDB y Mongoose.
+El enfoque principal fue verificar compatibilidad, lógica, validaciones e integridad
+del sistema ya implementado, no solicitar que la IA desarrollara completamente el proyecto.
+En algunas partes la IA completó código.
+
+--------------------------------------------------------------------------------
+CONTEXTO GENERAL
+--------------------------------------------------------------------------------
+
+Se trabajó en un backend utilizando Next.js App Router, JavaScript, MongoDB y Mongoose
+para un módulo médico de notas de evolución.
+
+El sistema incluye:
+
+- Pacientes con expediente y alergias
+- Notas de evolución inmutables
+- Notas aclaratorias asociadas a notas originales
+- Alertas de alergias al momento de crear notas
+- Endpoints API dentro de app/api
+- Modelos Mongoose dentro de models/
+- Uso de Mongoose 9 y MongoDB
+
+La IA se utilizó principalmente para:
+
+- Revisar la estructura implementada
+- Detectar posibles errores
+- Validar compatibilidad entre versiones
+- Analizar lógica de inmutabilidad
+- Revisar manejo de errores y validaciones
+
+--------------------------------------------------------------------------------
+PROMPT 1 — Revisión conexión MongoDB
+--------------------------------------------------------------------------------
+
+Revisa la implementación realizada en lib/mongodb.js.
+
+Analiza si la conexión está correctamente estructurada para Next.js App Router y
+Mongoose 9 utilizando un patrón singleton para evitar múltiples conexiones durante
+el hot-reload en desarrollo.
+
+Verifica:
+
+- Uso correcto de MONGODB_URI
+- Manejo de errores si la variable no existe
+- Compatibilidad con Next.js y Mongoose 9
+- Que no existan problemas de reconexión
+- Que el patrón utilizado sea adecuado para desarrollo y producción
+
+Indica posibles mejoras o riesgos encontrados en la estructura actual.
+
+--------------------------------------------------------------------------------
+PROMPT 2 — Revisión modelo Patient
+--------------------------------------------------------------------------------
+
+Revisa la estructura implementada en models/patient.js.
+
+Analiza:
+
+- Definición correcta de campos
+- Uso adecuado de timestamps
+- Validaciones necesarias
+- Configuración del campo numeroExpediente como único
+- Manejo correcto de alergias como subdocumentos embebidos
+- Compatibilidad con Mongoose 9
+- Prevención de redefinición del modelo en hot-reload
+
+Verifica también que los nombres de campos coincidan correctamente con los datos
+esperados en los endpoints del sistema.
+
+--------------------------------------------------------------------------------
+PROMPT 3 — Revisión modelo EvolutionNote
+--------------------------------------------------------------------------------
+
+Revisa la implementación realizada en models/EvolutionNote.js.
+
+Analiza:
+
+- Relación correcta con Patient
+- Validaciones del contenido
+- Configuración de createdAt sin updatedAt
+- Implementación de inmutabilidad
+- Hooks utilizados en save, updateOne, updateMany y findOneAndUpdate
+- Compatibilidad de hooks con Mongoose 9
+- Prevención de modificaciones posteriores a la creación
+
+Verifica que la lógica no afecte la creación normal de nuevas notas y que únicamente
+bloquee modificaciones posteriores.
+
+--------------------------------------------------------------------------------
+PROMPT 4 — Revisión modelo Clarification
+--------------------------------------------------------------------------------
+
+Revisa la estructura de models/Clarification.js.
+
+Analiza:
+
+- Relación correcta con EvolutionNote
+- Validaciones de contenido
+- Implementación de inmutabilidad
+- Uso correcto de hooks compatibles con Mongoose 9
+- Configuración únicamente con createdAt
+
+Validar que la estructura mantenga consistencia con la lógica utilizada en
+EvolutionNote.js.
+
+--------------------------------------------------------------------------------
+PROMPT 5 — Revisión helpers y validaciones
+--------------------------------------------------------------------------------
+
+Revisa el archivo lib/validations.js.
+
+Analiza:
+
+- Implementación de isValidObjectId
+- Sanitización de cadenas
+- Generación de alertas de alergias
+- Consistencia en nombres de variables
+- Prevención de posibles errores en runtime
+
+Verifica especialmente que no existan inconsistencias entre nombres como
+alergias/allergies que puedan provocar errores durante ejecución.
+
+--------------------------------------------------------------------------------
+PROMPT 6 — Revisión endpoint /api/patients
+--------------------------------------------------------------------------------
+
+Revisa la estructura implementada en app/api/patients/route.js.
+
+Analiza:
+
+- Uso correcto de connectDB()
+- Implementación de métodos GET y POST
+- Validación de campos requeridos
+- Manejo de errores HTTP
+- Manejo de errores duplicate key
+- Uso correcto de NextResponse.json
+- Búsqueda mediante regex
+- Compatibilidad con Next.js App Router
+
+Verifica que las respuestas HTTP estén correctamente estructuradas y que no se
+expongan errores internos sensibles.
+
+--------------------------------------------------------------------------------
+PROMPT 7 — Revisión endpoint /api/notes
+--------------------------------------------------------------------------------
+
+Revisa la implementación de app/api/notes/route.js.
+
+Analiza:
+
+- Validación de ObjectId
+- Obtención correcta de notas por paciente
+- Ordenamiento por fecha
+- Uso de populate
+- Asociación de clarificaciones
+- Prevención de consultas N+1
+- Generación de alertas de alergias
+- Persistencia correcta de alertas
+- Validaciones y manejo de errores
+
+Verifica también que las alertas almacenadas representen correctamente el estado
+del expediente al momento de crear la nota.
+
+--------------------------------------------------------------------------------
+PROMPT 8 — Revisión endpoint /api/notes/[id]
+--------------------------------------------------------------------------------
+
+Revisa la estructura de app/api/notes/[id]/route.js.
+
+Analiza:
+
+- Validación de params.id
+- Obtención de nota individual
+- Uso correcto de populate
+- Obtención de clarificaciones
+- Respuestas 404
+- Restricción de métodos PUT y DELETE
+- Uso correcto de status 405
+- Configuración de headers Allow
+
+Verifica que la lógica mantenga la inmutabilidad de las notas médicas.
+
+--------------------------------------------------------------------------------
+PROMPT 9 — Revisión endpoint /api/clarifications
+--------------------------------------------------------------------------------
+
+Revisa la implementación de app/api/clarifications/route.js.
+
+Analiza:
+
+- Validación de notaOriginalId
+- Verificación de existencia de EvolutionNote
+- Creación correcta de aclaratorias
+- Uso de populate
+- Ordenamiento por fecha
+- Validaciones de contenido
+- Manejo de errores HTTP
+
+Verifica que las aclaratorias se relacionen correctamente con la nota original y
+que no modifiquen el contenido histórico.
+
+--------------------------------------------------------------------------------
+PROMPT 10 — Corrección tras error detectado
+--------------------------------------------------------------------------------
+
+Al revisar la ejecución del sistema se detectó un ReferenceError relacionado con
+nombres inconsistentes de variables dentro de buildAllergyAlerts.
+
+Analiza el archivo lib/validations.js y verifica que todas las referencias utilicen
+el mismo nombre de variable para evitar errores durante runtime.
+
+Revisa consistencia general de parámetros y referencias internas.
+
+--------------------------------------------------------------------------------
+PROMPT 11 — Revisión compatibilidad Mongoose 9
+--------------------------------------------------------------------------------
+
+Durante las pruebas del endpoint POST /api/notes se detectó un error relacionado con
+hooks utilizando next().
+
+Revisa los hooks implementados en EvolutionNote.js y Clarification.js para validar
+compatibilidad con Mongoose 9.
+
+Analiza:
+
+- Uso correcto de pre hooks
+- Eliminación de callbacks incompatibles
+- Manejo correcto de throw en validaciones
+- Persistencia de la lógica de inmutabilidad
+
+Verifica que la estructura permita crear documentos nuevos sin errores y continúe
+bloqueando modificaciones posteriores.
